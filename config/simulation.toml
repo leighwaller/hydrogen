@@ -1,0 +1,5 @@
+user_count = 1
+fail_on_error = false
+[endpoint]
+method = "GET"
+url = "http://localhost:8080/test"

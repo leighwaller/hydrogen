@@ -1,12 +1,22 @@
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate uuid;
+extern crate toml;
 
-mod config;
+mod logging;
+mod model;
+
+// todo implement a simple client to execute the load
+// todo it should be message based and highly concurrent
+// todo set up some commands and a cli for the execution of the tests
+// todo future could include the option for a distributed mode as well as the default standalone
 
 fn main() {
-    config::logging::configure()
-        .expect("unable to configure logging");
+    logging::configure().expect("unable to configure logging");
+    info!("initializing system");
 
-    // todo implement a simple server to execute the load
-    info!("starting server");
+    info!("shutting down system resources");
 }
