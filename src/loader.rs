@@ -1,8 +1,10 @@
-use toml;
-use std::io::Read;
+use model::Simulation;
+use std;
 use std::fs::File;
+use std::io::Read;
+use toml;
 
-use model::{Simulation, Result};
+pub type Result<T> = std::result::Result<T, ConfigurationError>;
 
 pub trait ConfigLoader {
     fn new() -> Self;
@@ -23,8 +25,25 @@ impl ConfigLoader for DefaultConfigLoader {
         let mut buffer = String::new();
         file.read_to_string(&mut buffer)?;
         info!("simulation read in {}", buffer);
-
         return Ok(toml::from_str(&buffer)?);
+    }
+}
+
+quick_error! {
+    #[derive(Debug)]
+    pub enum ConfigurationError {
+        InvalidFile(err: std::io::Error) {
+            display("Invalid file path provided for configuration: {}", err)
+            from()
+        }
+        InvalidFormat(err: toml::de::Error) {
+            display("Invalid content in configuration file: {}", err)
+            from()
+        }
+        Other(descr: &'static str) {
+            description(descr)
+            display("Error {}", descr)
+        }
     }
 }
 
@@ -63,7 +82,7 @@ mod tests {
         let result = loader.load_simulation(".gitignore");
 
         assert!(result.is_err());
-        print!("error {}", result.err().unwrap());
+        let err = result.err().unwrap();
     }
 
 }
