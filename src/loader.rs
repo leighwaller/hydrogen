@@ -51,12 +51,19 @@ mod tests {
 
     #[test]
     fn should_handle_invalid_config_path() {
+        let loader = DefaultConfigLoader::new();
+        let result = loader.load_simulation("fake.tml");
 
+        assert!(result.is_err());
     }
 
     #[test]
     fn should_handle_invalid_content() {
+        let loader = DefaultConfigLoader::new();
+        let result = loader.load_simulation(".gitignore");
 
+        assert!(result.is_err());
+        print!("error {}", result.err().unwrap());
     }
 
 }
