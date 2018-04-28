@@ -1,9 +1,8 @@
-use uuid::Uuid;
+use std;
+use std::error;
+use std::fmt;
 use toml;
-use toml::de::Error;
-use std::io;
-use std::io::prelude::*;
-use std::fs::File;
+use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
 pub struct Simulation {
@@ -16,14 +15,6 @@ pub struct Simulation {
 }
 
 #[derive(Debug, Deserialize)]
-pub enum HttpMethod {
-    GET,
-    POST,
-    PUT,
-    PATCH,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct HttpEndpoint {
     #[serde(skip)]
     pub id: Uuid,
@@ -31,14 +22,12 @@ pub struct HttpEndpoint {
     pub method: HttpMethod,
 }
 
-impl HttpEndpoint {
-    fn new() -> HttpEndpoint {
-        HttpEndpoint {
-            id: Uuid::new_v4(),
-            url: String::from(""), // todo update this
-            method: HttpMethod::GET,
-        }
-    }
+#[derive(Debug, Deserialize)]
+pub enum HttpMethod {
+    GET,
+    POST,
+    PUT,
+    PATCH,
 }
 
 pub struct Message<T> {
@@ -51,46 +40,55 @@ pub enum Command {
     Check,
 }
 
-pub trait ConfigLoader {
-    fn new() -> Self;
-    // todo check if the common practice is to return custom wrapped errors
-    fn load_simulation(&self, filename: &str) -> Result<Simulation, Error>;
+// todo have a look at quick_error or error_chain
+#[derive(Debug)]
+pub enum Error {
+    IllegalConfiguration,
+    ParseToml(toml::de::Error),
+    ParseIO(std::io::Error)
 }
 
-pub struct DefaultConfigLoader;
+pub type Result<T> = std::result::Result<T, Error>;
 
-impl ConfigLoader for DefaultConfigLoader {
-    fn new() -> DefaultConfigLoader {
-        DefaultConfigLoader {}
-    }
-
-    fn load_simulation(&self, filename: &str) -> Result<Simulation, Error> {
-        info!("loading simulation config: {}", filename);
-        let mut file = File::open(filename).unwrap();
-        let mut buffer = String::new();
-
-        file.read_to_string(&mut buffer).unwrap();
-        info!("simulation read in {}", buffer);
-        //todo fix this to actually handle errors properly not unwrap
-        return toml::from_str(&buffer);
+// todo it would be good not to couple this module to the toml::de error types
+impl From<toml::de::Error> for Error {
+    fn from(err: toml::de::Error) -> Error {
+        Error::ParseToml(err)
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Error {
+        Error::ParseIO(err)
+    }
+}
 
-    #[test]
-    fn should_deserialize_simulation() {
-        let loader = DefaultConfigLoader::new();
+const ILLEGAL_CONFIG_ERROR_MSG: &str = "There is an error in the provided simulation config";
 
-        let result = loader.load_simulation("config/simulation.toml");
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Error::IllegalConfiguration => ILLEGAL_CONFIG_ERROR_MSG.fmt(f),
+            Error::ParseToml(ref e) => e.fmt(f),
+            Error::ParseIO(ref e) => e.fmt(f)
+        }
+    }
+}
 
-        assert!(result.is_ok());
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        match *self {
+            Error::IllegalConfiguration => ILLEGAL_CONFIG_ERROR_MSG,
+            Error::ParseToml(ref e) => e.description(),
+            Error::ParseIO(ref e) => e.description()
+        }
+    }
 
-        let simulation = result.unwrap();
-
-        assert_ne!(simulation.id, Uuid::nil());
-        assert_eq!(simulation.endpoint.url, "http://localhost:8080/test");
+    fn cause(&self) -> Option<&error::Error> {
+        match *self {
+            Error::IllegalConfiguration => None,
+            Error::ParseToml(ref e) => Some(e),
+            Error::ParseIO(ref e) => Some(e)
+        }
     }
 }

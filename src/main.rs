@@ -8,6 +8,7 @@ extern crate toml;
 
 mod logging;
 mod model;
+mod loader;
 
 // todo implement a simple client to execute the load
 // todo it should be message based and highly concurrent
