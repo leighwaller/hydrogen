@@ -1,4 +1,4 @@
-extern crate env_logger;
+use env_logger;
 
 pub fn configure() -> Result<(), ()> {
     env_logger::init();

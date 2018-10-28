@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate log;
+extern crate env_logger;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
@@ -12,6 +13,7 @@ mod logging;
 mod model;
 mod loader;
 
+use std::env;
 // todo implement a simple client to execute the load
 // todo it should be message based and highly concurrent
 // todo set up some commands and a cli for the execution of the tests
@@ -19,7 +21,8 @@ mod loader;
 
 fn main() {
     logging::configure().expect("unable to configure logging");
-    info!("initializing system");
+    let args: Vec<String> = env::args().collect();
+    info!("initializing system from args: {:?}", args);
 
     info!("shutting down system resources");
 }
