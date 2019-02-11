@@ -1,8 +1,10 @@
-use model::Simulation;
 use std;
 use std::fs::File;
 use std::io::Read;
+
 use toml;
+
+use model::Simulation;
 
 pub type Result<T> = std::result::Result<T, ConfigurationError>;
 
@@ -49,8 +51,9 @@ quick_error! {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use uuid::Uuid;
+
+    use super::*;
 
     #[test]
     fn should_deserialize_simulation() {
@@ -82,7 +85,7 @@ mod tests {
         let result = loader.load_simulation(".gitignore");
 
         assert!(result.is_err());
-        let err = result.err().unwrap();
     }
 
+    // todo test error types
 }

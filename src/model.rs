@@ -1,7 +1,3 @@
-use std;
-use std::error;
-use std::fmt;
-use toml;
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
@@ -42,9 +38,9 @@ pub enum HttpMethod {
 
 #[cfg(test)]
 mod tests {
+    use toml;
 
     use super::*;
-    use toml;
 
     #[test]
     fn should_deserialize_simulation() {
